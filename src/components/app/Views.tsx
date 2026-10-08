@@ -134,6 +134,28 @@ export function Overview() {
         </div>
       </Reveal>
 
+      {FUNCTIONS.map((f) => {
+        const Icon = FN_ICON[f.name];
+        const items = BUILDS.filter((b) => b.fn === f.name);
+        return (
+          <Reveal key={f.id}>
+            <section style={fnScope(f.name)} className="rounded-3xl border border-line bg-card/70 p-5 sm:p-6">
+              <header className="mb-4 flex flex-wrap items-center gap-3">
+                <span className="grid size-10 place-items-center rounded-xl bg-surface text-foreground"><Icon aria-hidden className="size-5" /></span>
+                <div className="min-w-0 flex-1">
+                  <h2 className="font-display text-2xl leading-[1.3] text-foreground">{f.name}</h2>
+                  {f.line && <p className="text-sm text-muted-foreground">{f.line}</p>}
+                </div>
+                <a href={`#/function/${f.id}`} className="inline-flex min-h-11 items-center gap-1 rounded-xl bg-surface px-4 text-sm font-semibold text-foreground hover:bg-foreground hover:text-white">
+                  All {items.length} builds <ArrowRight aria-hidden className="size-4" />
+                </a>
+              </header>
+              <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">{items.map((b) => <BuildCard key={b.id} b={b} />)}</div>
+            </section>
+          </Reveal>
+        );
+      })}
+
       <Reveal><Tile>
         <Label>How I work</Label>
         <div className="grid gap-4 md:grid-cols-3">
@@ -207,19 +229,5 @@ export function BuildView({ id }: { id: string }) {
         {next && <a href={`#/build/${next.id}`} className="flex items-center justify-end gap-3 rounded-2xl border border-line p-4 text-right hover:bg-surface"><span><span className="block text-xs text-muted-foreground">Next</span>{next.title}</span><ArrowRight className="size-5 shrink-0" /></a>}
       </nav>
     </article>
-  );
-}
-
-export function Contact() {
-  return (
-    <div className="rounded-3xl border border-line bg-card/70 p-8 md:p-12">
-      <p className="mb-3 text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">Contact</p>
-      <h1 className="font-display text-5xl leading-[1.3] pb-1">{PROFILE.name}</h1>
-      <p className="mt-2 text-lg text-muted-foreground">{PROFILE.title} · {PROFILE.location}</p>
-      <div className="mt-8 grid gap-4 sm:grid-cols-2">
-        <a href={`mailto:${PROFILE.email}`} className="flex items-center gap-3 rounded-2xl border border-line bg-card p-5 hover:bg-surface"><Mail className="size-5" />{PROFILE.email}</a>
-        <a href={PROFILE.linkedin} target="_blank" rel="noreferrer" className="flex items-center gap-3 rounded-2xl border border-line bg-card p-5 hover:bg-surface"><ExternalLink className="size-5" />{PROFILE.linkedinLabel}</a>
-      </div>
-    </div>
   );
 }

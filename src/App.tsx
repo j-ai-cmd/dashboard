@@ -3,7 +3,7 @@ import { Menu, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import ScrollProgress from "@/components/smoothui/scroll-progress";
 import { Sidebar } from "@/components/app/Sidebar";
-import { BuildView, Contact, FunctionView, Overview } from "@/components/app/Views";
+import { BuildView, FunctionView, Overview } from "@/components/app/Views";
 import { PROFILE } from "@/content";
 import { useHashRoute } from "@/useHashRoute";
 
@@ -46,7 +46,6 @@ export default function App() {
               {route.view === "overview" && <Overview />}
               {route.view === "function" && <FunctionView fnId={route.fn} />}
               {route.view === "build" && <BuildView id={route.id} />}
-              {route.view === "contact" && <Contact />}
             </motion.div>
           </AnimatePresence>
         </main>

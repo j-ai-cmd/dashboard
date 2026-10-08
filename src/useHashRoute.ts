@@ -3,14 +3,12 @@ import { useEffect, useState } from "react";
 export type Route =
   | { view: "overview" }
   | { view: "function"; fn: string }
-  | { view: "build"; id: string }
-  | { view: "contact" };
+  | { view: "build"; id: string };
 
 function parse(hash: string): Route {
   const parts = hash.replace(/^#\/?/, "").split("/").filter(Boolean);
   if (parts[0] === "build" && parts[1]) return { view: "build", id: parts[1] };
   if (parts[0] === "function" && parts[1]) return { view: "function", fn: parts[1] };
-  if (parts[0] === "contact") return { view: "contact" };
   return { view: "overview" };
 }
 

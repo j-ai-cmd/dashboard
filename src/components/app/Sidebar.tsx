@@ -19,6 +19,16 @@ export function Sidebar({ route, onNavigate }: { route: Route; onNavigate?: () =
   }, [q, fn]);
 
   const activeId = route.view === "build" ? route.id : null;
+  // A function tab filters the index and opens that function's page; "All" opens the overview
+  const pickFn = (id: string) => {
+    setFn(id);
+    window.location.hash = id === "all" ? "#/" : `#/function/${id}`;
+  };
+  // Keep the tab in step with the page that is open
+  useEffect(() => {
+    if (route.view === "function") setFn(route.fn);
+    else if (route.view === "overview") setFn("all");
+  }, [route]);
   const listRef = useRef<HTMLDivElement>(null);
   // keep the open build visible in the index
   useEffect(() => {
@@ -42,7 +52,6 @@ export function Sidebar({ route, onNavigate }: { route: Route; onNavigate?: () =
 
       <div className="space-y-1">
         {link("#/", "Overview", route.view === "overview")}
-        {link("#/contact", "Contact", route.view === "contact")}
       </div>
 
       <label className="relative block">
@@ -58,7 +67,7 @@ export function Sidebar({ route, onNavigate }: { route: Route; onNavigate?: () =
       </label>
 
       <div>
-        <AnimatedTabs variant="pill" className="flex-wrap rounded-2xl" activeTab={fn} onChange={setFn}
+        <AnimatedTabs variant="pill" className="flex-wrap rounded-2xl" activeTab={fn} onChange={pickFn}
           tabs={[{ id: "all", label: "All" }, ...FUNCTIONS.map((f) => ({ id: f.id, label: f.name }))]} />
       </div>
 
