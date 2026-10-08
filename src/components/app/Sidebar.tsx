@@ -6,7 +6,7 @@ import { BUILDS } from "@/data";
 import { FUNCTIONS, PROFILE } from "@/content";
 import type { Route } from "@/useHashRoute";
 import { cn } from "@/lib/utils";
-import { FN_ICON } from "./icons";
+import { FN_ICON, fnScope } from "./icons";
 
 export function Sidebar({ route, onNavigate }: { route: Route; onNavigate?: () => void }) {
   const [q, setQ] = useState("");
@@ -76,11 +76,11 @@ export function Sidebar({ route, onNavigate }: { route: Route; onNavigate?: () =
                 id: f.id,
                 title: `${f.name} · ${items.length}`,
                 content: (
-                  <div className="space-y-0.5 pb-2">
+                  <div className="space-y-0.5 pb-2" style={fnScope(f.name)}>
                     <a href={`#/function/${f.id}`} onClick={onNavigate}
                       className={cn("flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-muted-foreground hover:bg-surface",
                         route.view === "function" && route.fn === f.id && "bg-surface font-semibold text-foreground")}>
-                      <Icon aria-hidden className="size-4" /> All {f.name.toLowerCase()} builds
+                      <Icon aria-hidden className="size-4 text-foreground" /> All {f.name.toLowerCase()} builds
                     </a>
                     {items.map((b) => link(`#/build/${b.id}`, b.title, activeId === b.id))}
                   </div>

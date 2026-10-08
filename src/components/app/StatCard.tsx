@@ -10,7 +10,7 @@ export function StatCard({ s }: { s: Stat }) {
   const [val, setVal] = useState(reduce || s.num === null ? s.num ?? 0 : 0);
   useEffect(() => { if (inView && s.num !== null) setVal(s.num); }, [inView, s.num]);
   return (
-    <div ref={ref} className="rounded-2xl border border-line bg-card p-5">
+    <div ref={ref} className="rounded-2xl bg-surface p-5 text-foreground">
       <div className="font-display text-4xl leading-[1.3] pb-1">
         {s.num === null ? s.raw : (
           <>
@@ -20,7 +20,7 @@ export function StatCard({ s }: { s: Stat }) {
           </>
         )}
       </div>
-      <p className="mt-2 text-sm leading-snug text-muted-foreground">{s.label}</p>
+      <p className="mt-2 text-sm leading-snug">{s.label}</p>
     </div>
   );
 }

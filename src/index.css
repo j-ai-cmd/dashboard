@@ -14,6 +14,12 @@
   --color-muted: #575B89;
   --color-line: #DDD7CC;
   --color-accent: #2A2D6B;
+  /* Function colours: deep (text, solid blocks) + tint (soft fills) */
+  --fn-admin: #1F4E8C; --fn-admin-tint: #E6EEF8;
+  --fn-sales: #1E6B4A; --fn-sales-tint: #E3F2EA;
+  --fn-recruitment: #8A4B0F; --fn-recruitment-tint: #FBEFDC;
+  --fn-marketing: #9B2C55; --fn-marketing-tint: #FBE7EE;
+  --fn-legal: #5B2A86; --fn-legal-tint: #EFE7F7;
 }
 
 /* Scoped mapping: smoothui token names -> DESIGN.md tokens (no new globals) */
