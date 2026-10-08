@@ -42,7 +42,7 @@ export default function App() {
           <ScrollProgress variant="bar" position="top" thickness={3} />
           <AnimatePresence mode="wait">
             <motion.div key={key} className="mx-auto max-w-6xl p-4 sm:p-6 lg:p-10"
-              initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} transition={{ duration: 0.3 }}>
+              initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, transition: { duration: 0.12 } }} transition={{ duration: 0.25 }}>
               {route.view === "overview" && <Overview />}
               {route.view === "function" && <FunctionView fnId={route.fn} />}
               {route.view === "build" && <BuildView id={route.id} />}
