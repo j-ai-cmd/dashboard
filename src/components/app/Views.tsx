@@ -21,13 +21,23 @@ const Reveal = ({ children, className = "" }: { children: React.ReactNode; class
   return <ScrollReveal className={className} duration={0.35} yOffset={12} scale={1}>{children}</ScrollReveal>;
 };
 
-// Tool chips; each keeps a reserved circle where its logo goes later
+// Logo file per tool (public/logos). Tools without one show the name only.
+const LOGO: Record<string, string> = {
+  "Apollo.io": "apollo.svg", "ChatGPT image model": "openai.svg", Claude: "claude.svg", "Clio API": "clio.png", DocuSign: "docusign.svg",
+  "Excel sheets": "excel.svg", Fireflies: "fireflies.png", Gmail: "gmail.svg", GoHighLevel: "gohighlevel.png", HubSpot: "hubspot.svg",
+  HyperFrames: "hyperframes.svg", Instagram: "instagram.svg", Kimi: "kimi.svg", "Kommo CRM": "kommo.png", "Kommo workflows": "kommo.png",
+  "LinkedIn data": "linkedin.svg", MCP: "mcp.svg", "Make.com": "make.svg", "Meta Ads": "meta.svg", "Microsoft 365": "microsoft-365.svg",
+  "Microsoft Entra": "entra.svg", "Microsoft Teams": "teams.svg", Notion: "notion.svg", OpenClaw: "openclaw.svg", Outlook: "outlook.svg",
+  "Power BI": "powerbi.svg", Python: "python.svg", "Python (FastMCP)": "python.svg", Salesforce: "salesforce.svg", SharePoint: "sharepoint.svg",
+  "Smokeball API": "smokeball.png", "Zoho Recruit": "zoho.svg",
+};
+
 function ToolsSlot({ tools }: { tools: string[] }) {
   return (
     <ul className="flex flex-wrap gap-2">
       {tools.map((t) => (
-        <li key={t} className="inline-flex items-center gap-2 rounded-full border border-line bg-card py-1 pl-1 pr-3 text-sm font-medium">
-          <span aria-hidden className="size-6 shrink-0 rounded-full border border-dashed border-line bg-surface" />
+        <li key={t} className={`inline-flex min-h-9 items-center gap-2 rounded-full border border-line bg-card py-1 pr-3 text-sm font-medium ${LOGO[t] ? "pl-1.5" : "pl-3"}`}>
+          {LOGO[t] && <img src={`./logos/${LOGO[t]}`} alt="" aria-hidden width={22} height={22} loading="lazy" className="size-[22px] shrink-0 object-contain" />}
           {t}
         </li>
       ))}
@@ -36,7 +46,7 @@ function ToolsSlot({ tools }: { tools: string[] }) {
 }
 
 // Named products used across builds (skips generic labels like "Email" or "Workflows"), most used first
-const PRODUCTS = new Set(["Claude", "OpenClaw", "Kimi", "MCP", "Smokeball API", "Clio API", "HubSpot", "Notion", "Salesforce", "GoHighLevel",
+const PRODUCTS = new Set(["Excel sheets", "LinkedIn data", "Claude", "OpenClaw", "Kimi", "MCP", "Smokeball API", "Clio API", "HubSpot", "Notion", "Salesforce", "GoHighLevel",
   "Kommo CRM", "Apollo.io", "Zoho Recruit", "Microsoft 365", "Microsoft Teams", "Microsoft Entra", "SharePoint", "Outlook", "Power BI",
   "Gmail", "Make.com", "DocuSign", "Fireflies", "Meta Ads", "ChatGPT image model", "HyperFrames", "Python", "Instagram"]);
 const ALL_TOOLS = (() => {
