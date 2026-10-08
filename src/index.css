@@ -7,12 +7,12 @@
 
 /* Design tokens from .final-skill/DESIGN.md */
 :root {
-  --color-bg: #E8E4D8;
-  --color-surface: #DFDACB;
-  --color-card: #F3F0E7;
+  --color-bg: #FAF7F2;
+  --color-surface: #F2EEE6;
+  --color-card: #FFFFFF;
   --color-text: #2A2D6B;
   --color-muted: #575B89;
-  --color-line: #A8A8BE;
+  --color-line: #DDD7CC;
   --color-accent: #2A2D6B;
 }
 
@@ -37,7 +37,7 @@
 html, body, #root { min-height: 100%; }
 body { background: var(--color-bg); color: var(--color-text); font-family: var(--font-sans); font-size: 16px; line-height: 1.5; }
 
-.grain { position: fixed; inset: 0; pointer-events: none; z-index: 0; mix-blend-mode: multiply; opacity: .18; filter: url(#grain); }
+.grain { position: fixed; inset: 0; pointer-events: none; z-index: 0; mix-blend-mode: multiply; opacity: .05; filter: url(#grain); }
 
 :focus-visible { outline: 2px solid var(--color-text); outline-offset: 2px; }
 

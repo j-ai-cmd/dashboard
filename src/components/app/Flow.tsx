@@ -2,20 +2,7 @@ import { useInView, useReducedMotion } from "motion/react";
 import { useEffect, useRef, useState } from "react";
 import AnimatedStepper from "@/components/smoothui/animated-stepper";
 
-function useNarrow() {
-  const q = "(max-width: 767px)";
-  const [n, setN] = useState(() => typeof window !== "undefined" && window.matchMedia(q).matches);
-  useEffect(() => {
-    const m = window.matchMedia(q);
-    const on = () => setN(m.matches);
-    m.addEventListener("change", on);
-    return () => m.removeEventListener("change", on);
-  }, []);
-  return n;
-}
-
 export function Flow({ steps }: { steps: string[] }) {
-  const narrow = useNarrow();
   const ref = useRef<HTMLDivElement>(null);
   const inView = useInView(ref, { once: true, margin: "-15%" });
   const reduce = useReducedMotion();
@@ -40,10 +27,10 @@ export function Flow({ steps }: { steps: string[] }) {
     <div ref={ref}>
       <AnimatedStepper
         allowClickNavigation
-        variant={narrow ? "vertical" : "horizontal"}
+        variant="vertical" /* step text is too long for the horizontal layout */
         currentStep={step}
         onStepChange={(s) => { setAuto(false); setStep(s); }}
-        steps={steps.map((label, i) => ({ label: `${String(i + 1).padStart(2, "0")}`, description: label, content: <p className="font-display text-xl">{label}</p> }))}
+        steps={steps.map((label) => ({ label }))}
       />
     </div>
   );

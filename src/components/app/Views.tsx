@@ -14,27 +14,40 @@ const Label = ({ children }: { children: React.ReactNode }) => (
 const Tile = ({ children, className = "" }: { children: React.ReactNode; className?: string }) => (
   <section className={`min-w-0 overflow-hidden rounded-3xl border border-line bg-card/70 p-5 sm:p-6 ${className}`}>{children}</section>
 );
-const Reveal = ({ children }: { children: React.ReactNode }) => {
+// className lands on the wrapper, which is the grid item, so col-span classes go here
+const Reveal = ({ children, className = "" }: { children: React.ReactNode; className?: string }) => {
   const reduce = useReducedMotion();
-  if (reduce) return <div>{children}</div>;
-  return <ScrollReveal duration={0.35} yOffset={12} scale={1}>{children}</ScrollReveal>;
+  if (reduce) return <div className={className}>{children}</div>;
+  return <ScrollReveal className={className} duration={0.35} yOffset={12} scale={1}>{children}</ScrollReveal>;
 };
 
-function ToolsSlot({ tools }: { tools?: string[] }) {
+// Tool chips; each keeps a reserved circle where its logo goes later
+function ToolsSlot({ tools }: { tools: string[] }) {
   return (
-    <div>
-      {tools && (
-        <div className="mb-3 flex flex-wrap gap-2">
-          {tools.map((t) => <span key={t} className="rounded-full border border-foreground px-3 py-1 text-sm font-medium">{t}</span>)}
-        </div>
-      )}
-      {/* Reserved space for tool logos (to be added) */}
-      <div aria-hidden className="grid h-14 grid-cols-3 gap-2 sm:grid-cols-6 lg:grid-cols-3">
-        {Array.from({ length: 6 }).map((_, i) => <div key={i} className="rounded-xl border border-dashed border-line" />)}
-      </div>
-    </div>
+    <ul className="flex flex-wrap gap-2">
+      {tools.map((t) => (
+        <li key={t} className="inline-flex items-center gap-2 rounded-full border border-line bg-card py-1 pl-1 pr-3 text-sm font-medium">
+          <span aria-hidden className="size-6 shrink-0 rounded-full border border-dashed border-line bg-surface" />
+          {t}
+        </li>
+      ))}
+    </ul>
   );
 }
+
+// Named products used across builds (skips generic labels like "Email" or "Workflows"), most used first
+const PRODUCTS = new Set(["Claude", "OpenClaw", "Kimi", "MCP", "Smokeball API", "Clio API", "HubSpot", "Notion", "Salesforce", "GoHighLevel",
+  "Kommo CRM", "Apollo.io", "Zoho Recruit", "Microsoft 365", "Microsoft Teams", "Microsoft Entra", "SharePoint", "Outlook", "Power BI",
+  "Gmail", "Make.com", "DocuSign", "Fireflies", "Meta Ads", "ChatGPT image model", "HyperFrames", "Python", "Instagram"]);
+const ALL_TOOLS = (() => {
+  const count = new Map<string, number>();
+  BUILDS.forEach((b) => b.tools.forEach((t) => PRODUCTS.has(t) && count.set(t, (count.get(t) ?? 0) + 1)));
+  return [...count.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0])).map(([t]) => t);
+})();
+
+// The builds the bio names as the biggest
+const FEATURED = ["openclaw-firmwide-workforce", "smokeball-mcp-connector", "clio-mcp-connector", "hubspot-notion-two-way-sync", "zoho-recruit-integration", "sherlock-reel-pipeline"]
+  .map((id) => BUILDS.find((b) => b.id === id)!).filter(Boolean);
 
 function BuildCard({ b }: { b: Build }) {
   const Icon = FN_ICON[b.fn];
@@ -54,19 +67,23 @@ export function Overview() {
   return (
     <div className="space-y-6">
       <Reveal>
-        <header className="grid gap-6 rounded-3xl border border-line bg-card/70 p-8 md:grid-cols-[1fr_auto] md:items-center">
+        <header className="grid gap-6 rounded-3xl border border-line bg-card/70 p-6 sm:p-8 md:grid-cols-[1fr_auto] md:items-center">
           <div>
             <p className="mb-3 text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">{PROFILE.title}</p>
-            <h1 className="font-display text-4xl leading-[1.3] pb-1 md:text-5xl">{PROFILE.headline}</h1>
+            <h1 className="font-display text-3xl leading-[1.3] pb-1 sm:text-4xl md:text-5xl">{PROFILE.headline}</h1>
             <p className="mt-4 text-muted-foreground">{PROFILE.name} · {PROFILE.location}</p>
+            <div className="mt-6 flex flex-wrap gap-3">
+              <a href={`mailto:${PROFILE.email}`} className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-foreground px-4 text-[15px] font-semibold text-background hover:opacity-90"><Mail aria-hidden className="size-4" />{PROFILE.email}</a>
+              <a href={PROFILE.linkedin} target="_blank" rel="noreferrer" className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-foreground/40 px-4 text-[15px] font-semibold hover:bg-surface"><ExternalLink aria-hidden className="size-4" />LinkedIn</a>
+            </div>
           </div>
-          <img src="./photo.png" alt={PROFILE.name} className="size-36 rounded-3xl border border-line object-cover md:size-44" />
+          <img src="./photo.png" alt={PROFILE.name} className="order-first size-24 rounded-2xl border border-line object-cover md:order-none md:size-44 md:rounded-3xl" />
         </header>
       </Reveal>
 
       <div className="grid gap-6 lg:grid-cols-5">
-        <Reveal><Tile className="lg:col-span-3 h-full"><Label>About</Label>{PROFILE.bio.map((p, i) => <p key={i} className="mb-3 last:mb-0">{p}</p>)}</Tile></Reveal>
-        <Reveal><Tile className="lg:col-span-2 h-full">
+        <Reveal className="lg:col-span-3"><Tile className="h-full"><Label>About</Label>{PROFILE.bio.map((p, i) => <p key={i} className="mb-3 last:mb-0">{p}</p>)}</Tile></Reveal>
+        <Reveal className="lg:col-span-2"><Tile className="h-full">
           <Label>Experience</Label>
           <ol className="relative ml-2 border-l border-line">
             {PROFILE.experience.map((e) => (
@@ -86,6 +103,28 @@ export function Overview() {
       </div>
 
       <Reveal><Tile>
+        <Label>Biggest builds</Label>
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">{FEATURED.map((b) => <BuildCard key={b.id} b={b} />)}</div>
+      </Tile></Reveal>
+
+      <Reveal>
+        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
+          {FUNCTIONS.map((f) => {
+            const Icon = FN_ICON[f.name];
+            const n = BUILDS.filter((b) => b.fn === f.name).length;
+            return (
+              <a key={f.id} href={`#/function/${f.id}`} className="flex cursor-pointer flex-col rounded-2xl border border-line bg-card p-5 transition-colors hover:bg-surface">
+                <Icon aria-hidden className="mb-3 size-5" />
+                <div className="font-display text-xl">{f.name}</div>
+                {f.line && <p className="mt-1 text-sm text-muted-foreground">{f.line}</p>}
+                <p className="mt-auto pt-3 text-sm font-semibold">{n} builds</p>
+              </a>
+            );
+          })}
+        </div>
+      </Reveal>
+
+      <Reveal><Tile>
         <Label>How I work</Label>
         <div className="grid gap-4 md:grid-cols-3">
           {PROFILE.howIWork.map((s, i) => (
@@ -98,24 +137,8 @@ export function Overview() {
         </div>
       </Tile></Reveal>
 
-      <Reveal><Tile><Label>Tools</Label><ToolsSlot /></Tile></Reveal>
+      <Reveal><Tile><Label>Tools</Label><ToolsSlot tools={ALL_TOOLS} /></Tile></Reveal>
 
-      <Reveal>
-        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
-          {FUNCTIONS.map((f) => {
-            const Icon = FN_ICON[f.name];
-            const n = BUILDS.filter((b) => b.fn === f.name).length;
-            return (
-              <a key={f.id} href={`#/function/${f.id}`} className="cursor-pointer rounded-2xl border border-line bg-card p-5 transition-colors hover:bg-surface">
-                <Icon aria-hidden className="mb-3 size-5" />
-                <div className="font-display text-xl">{f.name}</div>
-                {f.line && <p className="mt-1 text-sm text-muted-foreground">{f.line}</p>}
-                <p className="mt-3 text-sm font-semibold">{n} builds</p>
-              </a>
-            );
-          })}
-        </div>
-      </Reveal>
     </div>
   );
 }

@@ -1,5 +1,5 @@
 import { Mail, Search, X } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import AnimatedTabs from "@/components/smoothui/animated-tabs";
 import BasicAccordion from "@/components/smoothui/basic-accordion";
 import { BUILDS } from "@/data";
@@ -19,10 +19,16 @@ export function Sidebar({ route, onNavigate }: { route: Route; onNavigate?: () =
   }, [q, fn]);
 
   const activeId = route.view === "build" ? route.id : null;
+  const listRef = useRef<HTMLDivElement>(null);
+  // keep the open build visible in the index
+  useEffect(() => {
+    listRef.current?.querySelector('[aria-current="page"]')?.scrollIntoView({ block: "nearest" });
+  }, [activeId]);
   const link = (href: string, label: string, active: boolean) => (
     <a href={href} onClick={onNavigate}
       className={cn("block rounded-lg px-3 py-2 text-[15px] transition-colors hover:bg-surface",
-        active && "bg-surface font-semibold")}>{label}</a>
+        active && "bg-surface font-semibold shadow-[inset_3px_0_0_var(--color-text)]")}
+      aria-current={active ? "page" : undefined}>{label}</a>
   );
 
   const groups = FUNCTIONS.map((f) => ({ f, items: filtered.filter((b) => b.fn === f.name) })).filter((g) => g.items.length);
@@ -42,7 +48,7 @@ export function Sidebar({ route, onNavigate }: { route: Route; onNavigate?: () =
       <label className="relative block">
                 <Search aria-hidden className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
         <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search builds or tools" aria-label="Search builds or tools"
-          className="h-11 w-full rounded-xl border border-line bg-card pl-9 pr-9 text-[15px] placeholder:text-muted-foreground" />
+          className="h-11 w-full rounded-xl border border-muted-foreground/50 bg-card pl-9 pr-9 text-[15px] placeholder:text-muted-foreground" />
         {q && (
           <button type="button" aria-label="Clear search" onClick={() => setQ("")}
             className="absolute right-1 top-1/2 grid size-9 -translate-y-1/2 cursor-pointer place-items-center rounded-lg hover:bg-surface">
@@ -51,12 +57,12 @@ export function Sidebar({ route, onNavigate }: { route: Route; onNavigate?: () =
         )}
       </label>
 
-      <div className="-mx-1 overflow-x-auto pb-1 [mask-image:linear-gradient(to_right,var(--color-text)_85%,transparent)] [&::-webkit-scrollbar]:hidden">
-        <AnimatedTabs variant="pill" activeTab={fn} onChange={setFn}
+      <div>
+        <AnimatedTabs variant="pill" className="flex-wrap rounded-2xl" activeTab={fn} onChange={setFn}
           tabs={[{ id: "all", label: "All" }, ...FUNCTIONS.map((f) => ({ id: f.id, label: f.name }))]} />
       </div>
 
-      <div className="min-h-0 flex-1 overflow-y-auto pr-1">
+      <div ref={listRef} className="min-h-0 flex-1 overflow-y-auto pr-1">
         {groups.length === 0 ? (
           <div className="rounded-xl border border-line bg-card p-4 text-sm">
             <p className="font-semibold">No builds match “{q}”.</p>

@@ -129,7 +129,7 @@ export default function AnimatedStepper({
           "relative flex",
           isHorizontal
             ? "flex-row items-center justify-between"
-            : "flex-col items-start gap-2"
+            : "flex-col items-start gap-4" /* wiring: gap-2 -> gap-4 so the progress line shows between steps */
         )}
         role="tablist"
       >
