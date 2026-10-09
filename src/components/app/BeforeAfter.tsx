@@ -51,7 +51,6 @@ export function BeforeAfter({ before, after }: { before: string; after: string }
           ⇆
         </button>
       </div>
-      <p className="mt-2 text-xs text-muted-foreground">Drag the handle, or use the arrow keys.</p>
     </div>
   );
 }

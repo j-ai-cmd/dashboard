@@ -1,7 +1,6 @@
 import { AnimatePresence, MotionConfig, motion } from "motion/react";
 import { Menu, X } from "lucide-react";
 import { useEffect, useState } from "react";
-import ScrollProgress from "@/components/smoothui/scroll-progress";
 import { Sidebar } from "@/components/app/Sidebar";
 import { BuildView, FunctionView, Overview } from "@/components/app/Views";
 import { PROFILE } from "@/content";
@@ -39,7 +38,6 @@ export default function App() {
         </AnimatePresence>
 
         <main id="main" className="min-w-0">
-          <ScrollProgress variant="bar" position="top" thickness={3} />
           <AnimatePresence mode="wait">
             <motion.div key={key} className="mx-auto max-w-6xl p-4 sm:p-6 lg:p-10"
               initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, transition: { duration: 0.12 } }} transition={{ duration: 0.25 }}>

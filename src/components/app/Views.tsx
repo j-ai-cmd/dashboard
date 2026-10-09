@@ -1,5 +1,7 @@
 import { ArrowLeft, ArrowRight, ExternalLink, Mail } from "lucide-react";
-import { useReducedMotion } from "motion/react";
+import { AnimatePresence, motion, useReducedMotion } from "motion/react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import AnimatedTabs from "@/components/smoothui/animated-tabs";
 import { ScrollReveal } from "@/components/amicro/scroll-reveal";
 import { BUILDS, type Build } from "@/data";
 import { FUNCTIONS, PROFILE } from "@/content";
@@ -32,13 +34,18 @@ const LOGO: Record<string, string> = {
   "Smokeball API": "smokeball.png", "Zoho Recruit": "zoho.svg",
 };
 
-function ToolsSlot({ tools }: { tools: string[] }) {
+// Tool chips; each one filters the work explorer to the builds that use that tool
+const toolHref = (t: string) => `#/?tool=${encodeURIComponent(t)}`;
+function ToolsSlot({ tools, active }: { tools: string[]; active?: string | null }) {
   return (
     <ul className="flex flex-wrap gap-2">
       {tools.map((t) => (
-        <li key={t} className={`inline-flex min-h-9 items-center gap-2 rounded-full border border-line bg-card py-1 pr-3 text-sm font-medium ${LOGO[t] ? "pl-1.5" : "pl-3"}`}>
-          {LOGO[t] && <img src={`./logos/${LOGO[t]}`} alt="" aria-hidden width={22} height={22} loading="lazy" className="size-[22px] shrink-0 object-contain" />}
-          {t}
+        <li key={t}>
+          <a href={toolHref(t)} aria-pressed={active === t}
+            className={`inline-flex min-h-9 items-center gap-2 rounded-full border py-1 pr-3 text-sm font-medium transition-colors ${LOGO[t] ? "pl-1.5" : "pl-3"} ${active === t ? "border-foreground bg-surface" : "border-line bg-card hover:border-foreground/50"}`}>
+            {LOGO[t] && <img src={`./logos/${LOGO[t]}`} alt="" aria-hidden width={22} height={22} loading="lazy" className="size-[22px] shrink-0 object-contain" />}
+            {t}
+          </a>
         </li>
       ))}
     </ul>
@@ -59,18 +66,106 @@ const ALL_TOOLS = (() => {
 const FEATURED = ["openclaw-firmwide-workforce", "smokeball-mcp-connector", "clio-mcp-connector", "hubspot-notion-two-way-sync", "zoho-recruit-integration", "sherlock-reel-pipeline"]
   .map((id) => BUILDS.find((b) => b.id === id)!).filter(Boolean);
 
-function BuildCard({ b }: { b: Build }) {
+function BuildCard({ b, hideFn = false }: { b: Build; hideFn?: boolean }) {
   const Icon = FN_ICON[b.fn];
   return (
     <a href={`#/build/${b.id}`} className="group flex h-full cursor-pointer flex-col rounded-2xl border border-line bg-card p-5 transition-colors hover:bg-surface">
       <div style={fnScope(b.fn)} className="mb-3 flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.16em] text-foreground">
-        <span className="grid size-7 place-items-center rounded-lg bg-surface"><Icon aria-hidden className="size-4" /></span> {b.fn} + {b.source}
+        <span className="grid size-7 place-items-center rounded-lg bg-surface"><Icon aria-hidden className="size-4" /></span> {hideFn ? b.source : `${b.fn} + ${b.source}`}
       </div>
       <div className="font-display text-xl leading-[1.35]">{b.title}</div>
       <p className="mt-2 flex-1 text-sm text-muted-foreground">{b.helped}</p>
       <span className="mt-4 inline-flex items-center gap-1 text-sm font-semibold">Open build <ArrowRight className="size-4 transition-transform group-hover:translate-x-0.5" /></span>
     </a>
   );
+}
+
+function About() {
+  const [more, setMore] = useState(false);
+  const [first, ...rest] = PROFILE.bio;
+  return (
+    <div>
+      <p>{first}</p>
+      <AnimatePresence initial={false}>
+        {more && (
+          <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.25 }} className="overflow-hidden">
+            {rest.map((p, i) => <p key={i} className="mt-3">{p}</p>)}
+          </motion.div>
+        )}
+      </AnimatePresence>
+      {rest.length > 0 && (
+        <button type="button" onClick={() => setMore((m) => !m)} aria-expanded={more}
+          className="mt-3 inline-flex min-h-11 cursor-pointer items-center text-sm font-semibold underline underline-offset-4 hover:no-underline">
+          {more ? "Show less" : "Read more"}
+        </button>
+      )}
+    </div>
+  );
+}
+
+const toolFromHash = () => {
+  const q = window.location.hash.split("?")[1];
+  return q ? new URLSearchParams(q).get("tool") : null;
+};
+
+// One place to browse every build: function tabs, plus an optional tool filter from the URL (#/?tool=HubSpot)
+function WorkExplorer() {
+  const [tab, setTab] = useState("featured");
+  const [tool, setTool] = useState<string | null>(toolFromHash);
+  const ref = useRef<HTMLElement>(null);
+  useEffect(() => {
+    const sync = () => {
+      const t = toolFromHash();
+      setTool(t);
+      if (t) setTimeout(() => ref.current?.scrollIntoView({ block: "start" }), 300);
+    };
+    if (toolFromHash()) sync();
+    window.addEventListener("hashchange", sync);
+    return () => window.removeEventListener("hashchange", sync);
+  }, []);
+  const items = useMemo(() => {
+    if (tool) return BUILDS.filter((b) => b.tools.includes(tool));
+    if (tab === "featured") return FEATURED;
+    if (tab === "all") return BUILDS;
+    return BUILDS.filter((b) => b.fn.toLowerCase() === tab);
+  }, [tab, tool]);
+  const fnTab = !tool && FUNCTIONS.some((f) => f.id === tab);
+  return (
+    <section ref={ref} className="scroll-mt-20 rounded-3xl border border-line bg-card/70 p-5 sm:p-6">
+      <Label>Work</Label>
+      <AnimatedTabs variant="pill" className="flex-wrap rounded-2xl" activeTab={tool ? "" : tab}
+        onChange={(id) => { setTab(id); if (tool) window.location.hash = "#/"; }}
+        tabs={[{ id: "featured", label: "Featured" }, { id: "all", label: "All" }, ...FUNCTIONS.map((f) => ({ id: f.id, label: f.name }))]} />
+      {tool && (
+        <div className="mt-4 flex flex-wrap items-center gap-2 text-sm">
+          <span className="text-muted-foreground">{items.length} builds use</span>
+          <a href="#/" className="inline-flex min-h-9 items-center gap-2 rounded-full bg-foreground px-3 font-semibold text-white" aria-label={`Clear ${tool} filter`}>
+            {LOGO[tool] && <img src={`./logos/${LOGO[tool]}`} alt="" className="size-5 rounded-full bg-white object-contain p-0.5" />}{tool}<span aria-hidden>×</span>
+          </a>
+        </div>
+      )}
+      <motion.div layout className="mt-5 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+        <AnimatePresence mode="popLayout" initial={false}>
+          {items.map((b) => (
+            <motion.div key={b.id} layout initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.98 }} transition={{ duration: 0.2 }}>
+              <BuildCard b={b} hideFn={fnTab} />
+            </motion.div>
+          ))}
+        </AnimatePresence>
+      </motion.div>
+    </section>
+  );
+}
+
+// Tools list that marks the tool currently filtering the explorer
+function OverviewTools() {
+  const [tool, setTool] = useState<string | null>(toolFromHash);
+  useEffect(() => {
+    const on = () => setTool(toolFromHash());
+    window.addEventListener("hashchange", on);
+    return () => window.removeEventListener("hashchange", on);
+  }, []);
+  return <ToolsSlot tools={ALL_TOOLS} active={tool} />;
 }
 
 export function Overview() {
@@ -92,7 +187,7 @@ export function Overview() {
       </Reveal>
 
       <div className="grid gap-6 lg:grid-cols-5">
-        <Reveal className="lg:col-span-3"><Tile className="h-full"><Label>About</Label>{PROFILE.bio.map((p, i) => <p key={i} className="mb-3 last:mb-0">{p}</p>)}</Tile></Reveal>
+        <Reveal className="lg:col-span-3"><Tile className="h-full"><Label>About</Label><About /></Tile></Reveal>
         <Reveal className="lg:col-span-2"><Tile className="h-full">
           <Label>Experience</Label>
           <ol className="relative ml-2 border-l border-line">
@@ -112,49 +207,7 @@ export function Overview() {
         </Tile></Reveal>
       </div>
 
-      <Reveal><Tile>
-        <Label>Biggest builds</Label>
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">{FEATURED.map((b) => <BuildCard key={b.id} b={b} />)}</div>
-      </Tile></Reveal>
-
-      <Reveal>
-        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
-          {FUNCTIONS.map((f) => {
-            const Icon = FN_ICON[f.name];
-            const n = BUILDS.filter((b) => b.fn === f.name).length;
-            return (
-              <a key={f.id} href={`#/function/${f.id}`} style={fnScope(f.name)} className="flex cursor-pointer flex-col rounded-2xl border border-transparent bg-surface p-5 text-foreground transition-colors hover:border-foreground/40">
-                <Icon aria-hidden className="mb-3 size-5" />
-                <div className="font-display text-xl">{f.name}</div>
-                {f.line && <p className="mt-1 text-sm">{f.line}</p>}
-                <p className="mt-auto pt-3 text-sm font-semibold">{n} builds</p>
-              </a>
-            );
-          })}
-        </div>
-      </Reveal>
-
-      {FUNCTIONS.map((f) => {
-        const Icon = FN_ICON[f.name];
-        const items = BUILDS.filter((b) => b.fn === f.name);
-        return (
-          <Reveal key={f.id}>
-            <section style={fnScope(f.name)} className="rounded-3xl border border-line bg-card/70 p-5 sm:p-6">
-              <header className="mb-4 flex flex-wrap items-center gap-3">
-                <span className="grid size-10 place-items-center rounded-xl bg-surface text-foreground"><Icon aria-hidden className="size-5" /></span>
-                <div className="min-w-0 flex-1">
-                  <h2 className="font-display text-2xl leading-[1.3] text-foreground">{f.name}</h2>
-                  {f.line && <p className="text-sm text-muted-foreground">{f.line}</p>}
-                </div>
-                <a href={`#/function/${f.id}`} className="inline-flex min-h-11 items-center gap-1 rounded-xl bg-surface px-4 text-sm font-semibold text-foreground hover:bg-foreground hover:text-white">
-                  All {items.length} builds <ArrowRight aria-hidden className="size-4" />
-                </a>
-              </header>
-              <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">{items.map((b) => <BuildCard key={b.id} b={b} />)}</div>
-            </section>
-          </Reveal>
-        );
-      })}
+      <Reveal><WorkExplorer /></Reveal>
 
       <Reveal><Tile>
         <Label>How I work</Label>
@@ -169,7 +222,7 @@ export function Overview() {
         </div>
       </Tile></Reveal>
 
-      <Reveal><Tile><Label>Tools</Label><ToolsSlot tools={ALL_TOOLS} /></Tile></Reveal>
+      <Reveal><Tile><Label>Tools</Label><OverviewTools /></Tile></Reveal>
 
     </div>
   );
@@ -188,7 +241,7 @@ export function FunctionView({ fnId }: { fnId: string }) {
         <p className="mt-4 text-sm font-semibold">{items.length} builds</p>
       </header>
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-        {items.map((b) => <Reveal key={b.id}><BuildCard b={b} /></Reveal>)}
+        {items.map((b) => <Reveal key={b.id}><BuildCard b={b} hideFn /></Reveal>)}
       </div>
     </div>
   );
