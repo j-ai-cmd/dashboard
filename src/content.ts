@@ -13,7 +13,7 @@ export const PROFILE = {
   ],
   experience: [
     { role: "Independent AI & Automation Contractor", org: "Self-employed", when: "Jul 2026 - Present" },
-    { role: "AI Automation Specialist", org: "Teams Squared (recruiting agency)", when: "Feb 2025 - Jun 2025" },
+    { role: "AI Automation Specialist", org: "Teams Squared (recruiting agency)", when: "Feb 2025 - Jun 2026" },
     { role: "CRM, Marketing & Automation Head", org: "Epirco Group", when: "Sep 2024 - Feb 2025" },
   ],
   education: { degree: "Business Administration (BBA), specialization in Computer Science", school: "Maharaja Agrasen Institute of Management Studies (MAIMS)", when: "2021 - 2024" },

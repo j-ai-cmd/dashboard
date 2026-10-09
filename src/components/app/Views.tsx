@@ -1,4 +1,4 @@
-import { ArrowLeft, ArrowRight, ExternalLink, Mail } from "lucide-react";
+import { ArrowLeft, ArrowRight, Check, ExternalLink, Link2, Mail } from "lucide-react";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import AnimatedTabs from "@/components/smoothui/animated-tabs";
@@ -247,6 +247,20 @@ export function FunctionView({ fnId }: { fnId: string }) {
   );
 }
 
+// Copies the build's share link (/b/<id>/), which has its own link preview image
+function CopyLink({ id }: { id: string }) {
+  const [done, setDone] = useState(false);
+  const copy = async () => {
+    try { await navigator.clipboard.writeText(`${window.location.origin}/b/${id}/`); setDone(true); setTimeout(() => setDone(false), 1800); } catch { /* clipboard blocked */ }
+  };
+  return (
+    <button type="button" onClick={copy} className="mt-6 inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-xl border border-white/50 px-4 text-[15px] font-semibold hover:bg-white/10">
+      {done ? <Check aria-hidden className="size-4" /> : <Link2 aria-hidden className="size-4" />}
+      <span aria-live="polite">{done ? "Link copied" : "Copy link"}</span>
+    </button>
+  );
+}
+
 export function BuildView({ id }: { id: string }) {
   const i = Math.max(0, BUILDS.findIndex((b) => b.id === id));
   const b = BUILDS[i];
@@ -261,6 +275,7 @@ export function BuildView({ id }: { id: string }) {
         </div>
         <h1 className="font-display text-3xl leading-[1.3] pb-1 break-words sm:text-4xl md:text-5xl">{b.title}</h1>
         <p className="mt-4 max-w-3xl text-lg">{b.problem}</p>
+        <CopyLink id={b.id} />
       </header>
 
       <div className="grid gap-6 lg:grid-cols-6">
