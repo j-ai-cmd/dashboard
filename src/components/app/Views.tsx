@@ -5,6 +5,7 @@ import AnimatedTabs from "@/components/smoothui/animated-tabs";
 import { ScrollReveal } from "@/components/amicro/scroll-reveal";
 import { BUILDS, type Build } from "@/data";
 import { FUNCTIONS, PROFILE } from "@/content";
+import { PROOF, TOOL_NOTES, type Snapshot, type ToolUse } from "@/proof";
 import { BeforeAfter } from "./BeforeAfter";
 import { Flow } from "./Flow";
 import { StatCard } from "./StatCard";
@@ -36,7 +37,7 @@ const LOGO: Record<string, string> = {
 
 // Tool chips; each one filters the work explorer to the builds that use that tool
 const toolHref = (t: string) => `#/?tool=${encodeURIComponent(t)}`;
-function ToolsSlot({ tools, active }: { tools: string[]; active?: string | null }) {
+function ToolsSlot({ tools, active, counts }: { tools: string[]; active?: string | null; counts?: Map<string, number> }) {
   return (
     <ul className="flex flex-wrap gap-2">
       {tools.map((t) => (
@@ -45,6 +46,7 @@ function ToolsSlot({ tools, active }: { tools: string[]; active?: string | null 
             className={`inline-flex min-h-9 items-center gap-2 rounded-full border py-1 pr-3 text-sm font-medium transition-colors ${LOGO[t] ? "pl-1.5" : "pl-3"} ${active === t ? "border-foreground bg-surface" : "border-line bg-card hover:border-foreground/50"}`}>
             {LOGO[t] && <img src={`./logos/${LOGO[t]}`} alt="" aria-hidden width={22} height={22} loading="lazy" className="size-[22px] shrink-0 object-contain" />}
             {t}
+            {counts?.get(t) && <span className="ml-0.5 rounded-full bg-surface px-1.5 text-xs text-muted-foreground" aria-label={`${counts.get(t)} builds`}>{counts.get(t)}</span>}
           </a>
         </li>
       ))}
@@ -52,15 +54,55 @@ function ToolsSlot({ tools, active }: { tools: string[]; active?: string | null 
   );
 }
 
+// Who the build was for, at a glance. Cells without data are skipped.
+function SnapshotStrip({ s }: { s: Snapshot }) {
+  const cells = [["Business", s.business], ["Stack", s.stack], ["When", s.period]].filter((c): c is [string, string] => !!c[1]);
+  if (!cells.length) return null;
+  return (
+    <dl className="grid gap-px overflow-hidden rounded-3xl border border-line bg-line sm:grid-flow-col sm:auto-cols-fr">
+      {cells.map(([k, v]) => (
+        <div key={k} className="bg-card px-5 py-4 sm:px-6">
+          <dt className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">{k}</dt>
+          <dd className="mt-1 font-medium">{v}</dd>
+        </div>
+      ))}
+    </dl>
+  );
+}
+
+// One row per tool: what was set up in it and what that changed
+function ToolTable({ rows }: { rows: ToolUse[] }) {
+  return (
+    <div>
+      <div className="hidden grid-cols-[minmax(10rem,1fr)_2fr_2fr] gap-6 border-b border-line pb-3 text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground md:grid">
+        <span>Tool</span><span>What I set up</span><span>What it changed</span>
+      </div>
+      <ul>
+        {rows.map((r) => (
+          <li key={r.tool} className="grid gap-2 border-b border-line py-4 last:border-b-0 md:grid-cols-[minmax(10rem,1fr)_2fr_2fr] md:gap-6">
+            <span className="flex items-center gap-2 font-semibold">
+              {LOGO[r.tool] && <img src={`./logos/${LOGO[r.tool]}`} alt="" aria-hidden width={22} height={22} loading="lazy" className="size-[22px] shrink-0 object-contain" />}
+              {r.tool}
+            </span>
+            <p><span className="mr-1 text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground md:hidden">Set up:</span>{r.setup}</p>
+            <p><span className="mr-1 text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground md:hidden">Changed:</span>{r.effect}</p>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
 // Named products used across builds (skips generic labels like "Email" or "Workflows"), most used first
 const PRODUCTS = new Set(["Excel sheets", "LinkedIn data", "Claude", "OpenClaw", "Kimi", "MCP", "Smokeball API", "Clio API", "HubSpot", "Notion", "Salesforce", "GoHighLevel",
   "Kommo CRM", "Apollo.io", "Zoho Recruit", "Microsoft 365", "Microsoft Teams", "Microsoft Entra", "SharePoint", "Outlook", "Power BI",
   "Gmail", "Make.com", "DocuSign", "Fireflies", "Meta Ads", "ChatGPT image model", "HyperFrames", "Python", "Instagram"]);
-const ALL_TOOLS = (() => {
+const TOOL_COUNT = (() => {
   const count = new Map<string, number>();
   BUILDS.forEach((b) => b.tools.forEach((t) => PRODUCTS.has(t) && count.set(t, (count.get(t) ?? 0) + 1)));
-  return [...count.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0])).map(([t]) => t);
+  return count;
 })();
+const ALL_TOOLS = [...TOOL_COUNT.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0])).map(([t]) => t);
 
 // The builds the bio names as the biggest
 const FEATURED = ["openclaw-firmwide-workforce", "smokeball-mcp-connector", "clio-mcp-connector", "hubspot-notion-two-way-sync", "zoho-recruit-integration", "sherlock-reel-pipeline"]
@@ -165,7 +207,12 @@ function OverviewTools() {
     window.addEventListener("hashchange", on);
     return () => window.removeEventListener("hashchange", on);
   }, []);
-  return <ToolsSlot tools={ALL_TOOLS} active={tool} />;
+  return (
+    <div>
+      <ToolsSlot tools={ALL_TOOLS} active={tool} counts={TOOL_COUNT} />
+      {tool && TOOL_NOTES[tool] && <p className="mt-4 text-sm" aria-live="polite"><span className="font-semibold">{tool}:</span> {TOOL_NOTES[tool]}</p>}
+    </div>
+  );
 }
 
 export function Overview() {
@@ -267,6 +314,7 @@ export function BuildView({ id }: { id: string }) {
   const prev = BUILDS[i - 1];
   const next = BUILDS[i + 1];
   const Icon = FN_ICON[b.fn];
+  const p = PROOF[b.id] ?? {};
   return (
     <article className="space-y-6">
       <header className="rounded-3xl p-6 text-white sm:p-8" style={fnSolid(b.fn)}>
@@ -278,15 +326,27 @@ export function BuildView({ id }: { id: string }) {
         <CopyLink id={b.id} />
       </header>
 
+      {p.snapshot && <SnapshotStrip s={p.snapshot} />}
+
       <div className="grid gap-6 lg:grid-cols-6">
-        <Tile className="lg:col-span-4"><Label>What I built</Label><p>{b.build}</p></Tile>
+        <Tile className="lg:col-span-4">
+          {p.feature && <><Label>Feature I targeted</Label><p className="mb-6 font-display text-xl leading-snug">{p.feature}</p></>}
+          <Label>What I built</Label><p>{b.build}</p>
+        </Tile>
         <Tile className="lg:col-span-2"><Label>Built with</Label><ToolsSlot tools={b.tools} /></Tile>
+        {p.toolUses && p.toolUses.length > 0 && <Tile className="lg:col-span-6"><Label>Tool by tool</Label><ToolTable rows={p.toolUses} /></Tile>}
         <Tile className="lg:col-span-6" style={fnScope(b.fn)}><Label>What changed</Label><BeforeAfter before={b.before} after={b.after} /></Tile>
         <Tile className="lg:col-span-6" style={fnScope(b.fn)}><Label>How it runs</Label><Flow steps={b.flow} /></Tile>
         {b.stats.length > 0 && (
           <Tile className="lg:col-span-6" style={fnScope(b.fn)}>
             <Label>Results</Label>
             <div className="grid gap-4 sm:grid-cols-3">{b.stats.map((s) => <StatCard key={s.raw + s.label} s={s} />)}</div>
+          </Tile>
+        )}
+        {p.tags && p.tags.length > 0 && (
+          <Tile className="lg:col-span-6">
+            <Label>Capabilities shown</Label>
+            <ul className="flex flex-wrap gap-2">{p.tags.map((t) => <li key={t} className="rounded-full border border-line bg-surface px-3 py-1 text-sm font-medium">{t}</li>)}</ul>
           </Tile>
         )}
         <Tile className="lg:col-span-6 border-transparent bg-surface text-foreground" style={fnScope(b.fn)}><Label>How it helped the team</Label><p className="font-display text-2xl leading-snug md:text-3xl">{b.helped}</p></Tile>
